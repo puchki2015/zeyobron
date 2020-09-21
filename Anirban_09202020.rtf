@@ -1,0 +1,301 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\colortbl ;\red0\green0\blue255;}
+{\*\generator Riched20 10.0.18362}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang9 Task 1:\par
+\b Sqoop Job with Timestamp-- Create a password file in edge node\b0\par
+[cloudera@quickstart ~]$ echo -n "cloudera" > my_pass_file\par
+[cloudera@quickstart ~]$ cat my_pass_file\par
+cloudera[cloudera@quickstart ~]$\par
+\par
+Creata a RDBMS table with timestamp\par
+\par
+[cloudera@quickstart ~]$ mysql -uroot -pcloudera\par
+Welcome to the MySQL monitor.  Commands end with ; or \\g.\par
+Your MySQL connection id is 44\par
+Server version: 5.1.73 Source distribution\par
+\par
+Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.\par
+\par
+Oracle is a registered trademark of Oracle Corporation and/or its\par
+affiliates. Other names may be trademarks of their respective\par
+owners.\par
+\par
+Type 'help;' or '\\h' for help. Type '\\c' to clear the current input statement.\par
+\par
+mysql> show databases;\par
++--------------------+\par
+| Database           |\par
++--------------------+\par
+| information_schema |\par
+| cm                 |\par
+| firehose           |\par
+| hue                |\par
+| metastore          |\par
+| mysql              |\par
+| nav                |\par
+| navms              |\par
+| oozie              |\par
+| retail_db          |\par
+| rman               |\par
+| sentry             |\par
+| zeyo_test          |\par
++--------------------+\par
+13 rows in set (0.00 sec)\par
+\par
+mysql> use zeyo_test;\par
+Reading table information for completion of table and column names\par
+You can turn off this feature to get a quicker startup with -A\par
+\par
+Database changed\par
+mysql> create table test_cust (custid int(10), firstname varchar(10),lastname varchar(10), create_ts timestamp);\par
+Query OK, 0 rows affected (1.45 sec)\par
+\par
+mysql> insert into test_cust values(1,'Ani','Mai',now());\par
+Query OK, 1 row affected (0.05 sec)\par
+\par
+mysql> insert into test_cust values(2,'Asd','Ytr',now());\par
+Query OK, 1 row affected (0.01 sec)\par
+\par
+mysql> insert into test_cust values(3,'Sfd','uiy',now());\par
+Query OK, 1 row affected (0.00 sec)\par
+\par
+mysql> insert into test_cust values(4,'lki','oiu',now());\par
+Query OK, 1 row affected (0.01 sec)\par
+\par
+mysql> insert into test_cust values(5,'uyt','oiu',now());\par
+Query OK, 1 row affected (0.00 sec)\par
+\par
+mysql> select * from test_cust;\par
++--------+-----------+----------+---------------------+\par
+| custid | firstname | lastname | create_ts           |\par
++--------+-----------+----------+---------------------+\par
+|      1 | Ani       | Mai      | 2020-09-21 14:29:18 |\par
+|      2 | Asd       | Ytr      | 2020-09-21 14:29:37 |\par
+|      3 | Sfd       | uiy      | 2020-09-21 14:29:54 |\par
+|      4 | lki       | oiu      | 2020-09-21 14:30:15 |\par
+|      5 | uyt       | oiu      | 2020-09-21 14:30:33 |\par
++--------+-----------+----------+---------------------+\par
+5 rows in set (0.00 sec)\par
+\par
+\par
+\b Task 2-- Creata a sqoop job without giving any last value, check column should be timestamp\par
+\par
+\b0 sqoop job --create test_ani_inc -- import --connect jdbc:mysql://localhost/zeyo_test --username root --password-file {{\field{\*\fldinst{HYPERLINK file:///home/cloudera/my_pass_file }}{\fldrslt{file:///home/cloudera/my_pass_file\ul0\cf0}}}}\f0\fs22  -m 1 --table test_cust --incremental append --check-column create_ts --target-dir /user/cloudera/test_animaitra\par
+\par
+\b Run the sqoop Job and Check Traget:\par
+\b0 [cloudera@quickstart ~]$ hadoop fs -ls /user/cloudera/test_animaitra\par
+Found 1 items\par
+-rw-r--r--   1 cloudera cloudera        160 2020-09-21 14:42 /user/cloudera/test_animaitra/part-m-00000\par
+[cloudera@quickstart ~]$ hadoop fs -cat /user/cloudera/test_animaitra/part-m-00000/*\par
+cat: `/user/cloudera/test_animaitra/part-m-00000/*': No such file or directory\par
+[cloudera@quickstart ~]$ hadoop fs -cat /user/cloudera/test_animaitra/part-m-00000\par
+1,Ani,Mai,2020-09-21 14:29:18.0\par
+2,Asd,Ytr,2020-09-21 14:29:37.0\par
+3,Sfd,uiy,2020-09-21 14:29:54.0\par
+4,lki,oiu,2020-09-21 14:30:15.0\par
+5,uyt,oiu,2020-09-21 14:30:33.0\par
+\par
+\b Task 3: Insert 3 more records:\b0\par
+\par
+mysql> insert into test_cust values(6,'New','New',now());\par
+Query OK, 1 row affected (0.00 sec)\par
+\par
+mysql> insert into test_cust values(7,'nw','oi',now());\par
+Query OK, 1 row affected (0.00 sec)\par
+\par
+mysql> insert into test_cust values(8,'nwe','oie',now());\par
+Query OK, 1 row affected (0.01 sec)\par
+\par
+\b Run the Job:\par
+sqoop job --exec test_ani_inc\par
+Output:\par
+\par
+\b0 hadoop fs -cat /user/cloudera/test_animaitra/part-m-00001\par
+6,New,New,2020-09-21 15:02:46.0\par
+7,nw,oi,2020-09-21 15:03:03.0\par
+8,nwe,oie,2020-09-21 15:03:14.0\par
+\par
+\par
+[cloudera@quickstart ~]$ sqoop job --show test_ani_inc\par
+Warning: /usr/lib/sqoop/../accumulo does not exist! Accumulo imports will fail.\par
+Please set $ACCUMULO_HOME to the root of your Accumulo installation.\par
+20/09/21 15:06:56 INFO sqoop.Sqoop: Running Sqoop version: 1.4.6-cdh5.13.0\par
+Job: test_ani_inc\par
+Tool: import\par
+Options:\par
+----------------------------\par
+verbose = false\par
+hcatalog.drop.and.create.table = false\par
+\b incremental.last.value = 2020-09-21 15:03:14.0\par
+\b0 db.connect.string = jdbc:mysql://localhost/zeyo_test\par
+\par
+\par
+Task 4:\par
+\b Sqoop job with hdfs password file:\b0\par
+Create a password file in hdfs\par
+\par
+[cloudera@quickstart ~]$ hadoop fs -put /home/cloudera/my_pass_file /user/cloudera\par
+[cloudera@quickstart ~]$ hadoop fs -cat /user/cloudera/my_pass_file\par
+cloudera[cloudera@quickstart ~]$\par
+\par
+\b Create and Run the Job:\par
+\b0\par
+sqoop job --create test_ani_1 -- import --connect jdbc:mysql://localhost/zeyo_test --username root --password-file hdfs:///user/cloudera/my_pass_file -m 1 --table test_cust --target-dir /user/cloudera/test_animaitra1\par
+sqoop job --exec test_ani_1\par
+\par
+20/09/21 15:18:15 INFO mapreduce.ImportJobBase: Retrieved 8 records.\par
+[cloudera@quickstart ~]$ hadoop fs -cat /user/cloudera/test_animaitra1/*\par
+1,Ani,Mai,2020-09-21 14:29:18.0\par
+2,Asd,Ytr,2020-09-21 14:29:37.0\par
+3,Sfd,uiy,2020-09-21 14:29:54.0\par
+4,lki,oiu,2020-09-21 14:30:15.0\par
+5,uyt,oiu,2020-09-21 14:30:33.0\par
+6,New,New,2020-09-21 15:02:46.0\par
+7,nw,oi,2020-09-21 15:03:03.0\par
+8,nwe,oie,2020-09-21 15:03:14.0\par
+\par
+\par
+\b List the sqoop Job:\par
+sqoop job --list\par
+[cloudera@quickstart ~]$ sqoop job --list\par
+Warning: /usr/lib/sqoop/../accumulo does not exist! Accumulo imports will fail.\par
+Please set $ACCUMULO_HOME to the root of your Accumulo installation.\par
+20/09/21 15:19:32 INFO sqoop.Sqoop: Running Sqoop version: 1.4.6-cdh5.13.0\par
+Available jobs:\par
+  test_ani_1\par
+  test_ani_inc\b0\par
+\par
+\b Task 5:\par
+\b0 Sqoop import using textfile and check file size:\par
+\par
+sqoop  import --connect jdbc:mysql://localhost/zeyo_test --username root --password-file hdfs:///user/cloudera/my_pass_file -m 1 --table test_cust --target-dir /user/cloudera/test_animaitra1_text --as-textfile\par
+File Size:\par
+[cloudera@quickstart ~]$ hadoop fs -ls /user/cloudera/test_animaitra1_text\par
+Found 2 items\par
+-rw-r--r--   1 cloudera cloudera          0 2020-09-21 15:22 /user/cloudera/test_animaitra1_text/_SUCCESS\par
+-\b rw-r--r--   1 cloudera cloudera        254 2020-09-21 15:22 /user/cloudera/test_animaitra1_text/part-m-00000\b0\par
+\par
+\b Task 6:\par
+\b0 Sqoop import using avro and check file size:\par
+ sqoop  import --connect jdbc:mysql://localhost/zeyo_test --username root --password-file hdfs:///user/cloudera/my_pass_file -m 1 --table test_cust --target-dir /user/cloudera/test_animaitra1_avro --as-avrodatafile\par
+[cloudera@quickstart ~]$ hadoop fs -ls /user/cloudera/test_animaitra1_avro\par
+Found 2 items\par
+-rw-r--r--   1 cloudera cloudera          0 2020-09-21 15:24 /user/cloudera/test_animaitra1_avro/_SUCCESS\par
+-rw-r--r--   1 cloudera cloudera        \b 700 \b0 2020-09-21 15:24 /user/cloudera/test_animaitra1_avro/part-m-00000.avro\par
+\par
+\b Task 7:\par
+\b0 Sqoop import using parquet and check file size:\par
+sqoop  import --connect jdbc:mysql://localhost/zeyo_test --username root --password-file hdfs:///user/cloudera/my_pass_file -m 1 --table test_cust --target-dir /user/cloudera/test_animaitra1_parquet --as-parquetfile\par
+\par
+[cloudera@quickstart ~]$ hadoop fs -ls /user/cloudera/test_animaitra1_parquet\par
+Found 3 items\par
+drwxr-xr-x   - cloudera cloudera          0 2020-09-21 15:26 /user/cloudera/test_animaitra1_parquet/.metadata\par
+drwxr-xr-x   - cloudera cloudera          0 2020-09-21 15:27 /user/cloudera/test_animaitra1_parquet/.signals\par
+-rw-r--r--   1 cloudera cloudera       \b 1264 \b0 2020-09-21 15:27 /user/cloudera/test_animaitra1_parquet/b61bc490-68dd-49db-a21e-9ab245bb3e00.parquet\par
+\par
+\b Task 7:\par
+\b0 Sqoop import using sequence and check file size:\par
+sqoop  import --connect jdbc:mysql://localhost/zeyo_test --username root --password-file hdfs:///user/cloudera/my_pass_file -m 1 --table test_cust --target-dir /user/cloudera/test_animaitra1_seq --as-sequencefile\par
+[cloudera@quickstart ~]$ hadoop fs -ls /user/cloudera/test_animaitra1_seq\par
+Found 2 items\par
+-rw-r--r--   1 cloudera cloudera          0 2020-09-21 15:30 /user/cloudera/test_animaitra1_seq/_SUCCESS\par
+-rw-r--r--   1 cloudera cloudera        \b 420 \b0 2020-09-21 15:30 /user/cloudera/test_animaitra1_seq/part-m-00000\par
+\par
+\par
+\b Txt: 200\par
+Avro:700\par
+Parquet:1264\par
+sequence: 420\par
+\par
+Task 8: Check default number of mappers functionality:\par
+\par
+\b0  sqoop  import --connect jdbc:mysql://localhost/zeyo_test --username root --password-file hdfs:///user/cloudera/my_pass_file  --table test_cust --target-dir /user/cloudera/test_animaitra1_def_mapper --split-by custid\par
+\par
+Default is 4 mapper as 4 part files have been created.\par
+[cloudera@quickstart ~]$ hadoop fs -ls /user/cloudera/test_animaitra1_def_mapper\par
+Found 5 items\par
+-rw-r--r--   1 cloudera cloudera          0 2020-09-21 15:37 /user/cloudera/test_animaitra1_def_mapper/_SUCCESS\par
+-rw-r--r--   1 cloudera cloudera         64 2020-09-21 15:37 /user/cloudera/test_animaitra1_def_mapper/part-m-00000\par
+-rw-r--r--   1 cloudera cloudera         64 2020-09-21 15:37 /user/cloudera/test_animaitra1_def_mapper/part-m-00001\par
+-rw-r--r--   1 cloudera cloudera         64 2020-09-21 15:37 /user/cloudera/test_animaitra1_def_mapper/part-m-00002\par
+-rw-r--r--   1 cloudera cloudera         62 2020-09-21 15:37 /user/cloudera/test_animaitra1_def_mapper/part-m-00003\par
+[cloudera@quickstart ~]$ hadoop fs -cat /user/cloudera/test_animaitra1_def_mapper/*\par
+1,Ani,Mai,2020-09-21 14:29:18.0\par
+2,Asd,Ytr,2020-09-21 14:29:37.0\par
+3,Sfd,uiy,2020-09-21 14:29:54.0\par
+4,lki,oiu,2020-09-21 14:30:15.0\par
+5,uyt,oiu,2020-09-21 14:30:33.0\par
+6,New,New,2020-09-21 15:02:46.0\par
+7,nw,oi,2020-09-21 15:03:03.0\par
+8,nwe,oie,2020-09-21 15:03:14.0\par
+\par
+\par
+Task9:\par
+\b Apply Split by of String Column:\par
+sqoop  import --connect jdbc:mysql://localhost/zeyo_test --username root --password-file hdfs:///user/cloudera/my_pass_file  --table test_cust --target-dir /user/cloudera/test_animaitra1_def_mapper_string --split-by firstname\par
+\par
+Even with default mapper the records are unequally distributed and also it seems that we have duplicate data.\par
+[cloudera@quickstart ~]$ hadoop fs -ls /user/cloudera/test_animaitra1_def_mapper_string\par
+Found 5 items\par
+-rw-r--r--   1 cloudera cloudera          0 2020-09-21 15:47 /user/cloudera/test_animaitra1_def_mapper_string/_SUCCESS\par
+-rw-r--r--   1 cloudera cloudera        128 2020-09-21 15:47 /user/cloudera/test_animaitra1_def_mapper_string/part-m-00000\par
+-rw-r--r--   1 cloudera cloudera          0 2020-09-21 15:47 /user/cloudera/test_animaitra1_def_mapper_string/part-m-00001\par
+-rw-r--r--   1 cloudera cloudera         64 2020-09-21 15:47 /user/cloudera/test_animaitra1_def_mapper_string/part-m-00002\par
+-rw-r--r--   1 cloudera cloudera        190 2020-09-21 15:47 /user/cloudera/test_animaitra1_def_mapper_string/part-m-00003\par
+[cloudera@quickstart ~]$ hadoop fs -cat /user/cloudera/test_animaitra1_def_mapper_string/*\par
+1,Ani,Mai,2020-09-21 14:29:18.0\par
+2,Asd,Ytr,2020-09-21 14:29:37.0\par
+4,lki,oiu,2020-09-21 14:30:15.0\par
+6,New,New,2020-09-21 15:02:46.0\par
+1,Ani,Mai,2020-09-21 14:29:18.0\par
+2,Asd,Ytr,2020-09-21 14:29:37.0\par
+3,Sfd,uiy,2020-09-21 14:29:54.0\par
+4,lki,oiu,2020-09-21 14:30:15.0\par
+5,uyt,oiu,2020-09-21 14:30:33.0\par
+6,New,New,2020-09-21 15:02:46.0\par
+7,nw,oi,2020-09-21 15:03:03.0\par
+8,nwe,oie,2020-09-21 15:03:14.0\par
+\par
+\par
+Task 11:\par
+Add Primary Key:\par
+\b0 mysql> alter table test_cust add primary key (custid);\par
+Query OK, 8 rows affected (1.30 sec)\par
+Records: 8  Duplicates: 0  Warnings: 0\par
+\par
+mysql> describe test_cust;\par
++-----------+-------------+------+-----+-------------------+-----------------------------+\par
+| Field     | Type        | Null | Key | Default           | Extra                       |\par
++-----------+-------------+------+-----+-------------------+-----------------------------+\par
+| custid    | int(10)     | NO   | PRI | 0                 |                             |\par
+| firstname | varchar(10) | YES  |     | NULL              |                             |\par
+| lastname  | varchar(10) | YES  |     | NULL              |                             |\par
+| create_ts | timestamp   | NO   |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |\par
++-----------+-------------+------+-----+-------------------+-----------------------------+\par
+4 rows in set (0.00 sec)\par
+\par
+mysql>\par
+\b Do sqoop import without giving split by:\par
+\b0\par
+\b sqoop  import --connect jdbc:mysql://localhost/zeyo_test --username root --password-file hdfs:///user/cloudera/my_pass_file  --table test_cust --target-dir /user/cloudera/test_animaitra1_def_mapper_without_split\par
+\par
+Observation: Equal distribution of data.\par
+Do sqoop import giving split by\par
+sqoop  import --connect jdbc:mysql://localhost/zeyo_test --username root --password-file hdfs:///user/cloudera/my_pass_file  --table test_cust --target-dir /user/cloudera/test_animaitra1_def_mapper_without_split --split-by custid\par
+\par
+[cloudera@quickstart ~]$ hadoop fs -ls /user/cloudera/test_animaitra1_def_mapper_with_split\par
+Found 5 items\par
+-rw-r--r--   1 cloudera cloudera          0 2020-09-21 15:57 /user/cloudera/test_animaitra1_def_mapper_with_split/_SUCCESS\par
+-rw-r--r--   1 cloudera cloudera         64 2020-09-21 15:57 /user/cloudera/test_animaitra1_def_mapper_with_split/part-m-00000\par
+-rw-r--r--   1 cloudera cloudera         64 2020-09-21 15:57 /user/cloudera/test_animaitra1_def_mapper_with_split/part-m-00001\par
+-rw-r--r--   1 cloudera cloudera         64 2020-09-21 15:57 /user/cloudera/test_animaitra1_def_mapper_with_split/part-m-00002\par
+-rw-r--r--   1 cloudera cloudera         62 2020-09-21 15:57 /user/cloudera/test_animaitra1_def_mapper_with_split/part-m-00003\par
+\b0\par
+\par
+\b Observation: Equal distribution of data.\par
+\b0\par
+\par
+\par
+\par
+}
+ 
